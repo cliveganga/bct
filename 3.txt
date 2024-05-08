@@ -1,0 +1,100 @@
+Lab 3: Blockchain Programming
+Task 1: Write a code in Python to build a Blockchain 
+Task 2: Demonstrate the Blockchain basic working
+Task 3: Solve cryptographic puzzles for the desired prefix of the hash value of a blockchain. 
+Task 4: Find the nonce for prefixes: 4-zeros and 5-zeros
+
+----------------------------------------------------------------
+import hashlib
+import datetime
+
+class Block:
+    def __init__(self, index, timestamp, data, previous_hash):
+        self.index = index
+        self.timestamp = timestamp
+        self.data = data
+        self.previous_hash = previous_hash
+        self.nonce = 0
+        self.hash = self.calculate_hash()
+
+    def calculate_hash(self):
+        sha = hashlib.sha256()
+        sha.update(str(self.index).encode('utf-8') +
+                    str(self.timestamp).encode('utf-8') +
+                    str(self.data).encode('utf-8') +
+                    str(self.previous_hash).encode('utf-8') +
+                    str(self.nonce).encode('utf-8'))
+        return sha.hexdigest()
+
+    def mine_block(self, difficulty):
+        prefix_str = '0' * difficulty
+        while self.hash[0:difficulty] != prefix_str:
+            self.nonce += 1
+            self.hash = self.calculate_hash()
+
+class Blockchain:
+    def __init__(self):
+        self.chain = [self.create_genesis_block()]
+        self.difficulty = 4
+
+    def create_genesis_block(self):
+        return Block(0, datetime.datetime.now(), "Genesis Block", "0")
+
+    def get_latest_block(self):
+        return self.chain[-1]
+
+    def add_block(self, new_block):
+        new_block.previous_hash = self.get_latest_block().hash
+        new_block.mine_block(self.difficulty)
+        self.chain.append(new_block)
+
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+
+            if current_block.hash != current_block.calculate_hash():
+                return False
+
+            if current_block.previous_hash != previous_block.hash:
+                return False
+
+        return True
+
+if __name__ == "__main__":
+    # Task 1: Create a Blockchain and add some blocks
+    blockchain = Blockchain()
+    blockchain.add_block(Block(1, datetime.datetime.now(), "Transaction 1", ""))
+    blockchain.add_block(Block(2, datetime.datetime.now(), "Transaction 2", ""))
+    print("Blockchain created and blocks added successfully.")
+
+    # Task 2: Demonstrate basic working of Blockchain
+    print("\nBlockchain validity:", blockchain.is_chain_valid())
+
+    # Task 3: Solve cryptographic puzzles for the desired prefix of the hash value of a blockchain
+    # This is done automatically while adding blocks due to the mine_block() function.
+
+    # Task 4: Find the nonce for prefixes: 4-zeros and 5-zeros
+    print("\nMining block with 4 zeros prefix...")
+    block4 = Block(3, datetime.datetime.now(), "Transaction 3", "")
+    block4.mine_block(4)
+    print("Nonce for 4 zeros prefix:", block4.nonce)
+    
+    print("\nMining block with 5 zeros prefix...")
+    block5 = Block(4, datetime.datetime.now(), "Transaction 4", "")
+    block5.mine_block(5)
+    print("Nonce for 5 zeros prefix:", block5.nonce)
+----------------------------------------------------------------
+Imports the necessary modules hashlib for cryptographic hashing functions and datetime for timestamping.
+Defines a class Block to represent each block in the blockchain. It contains attributes like index, timestamp, data, previous hash, nonce, and hash.
+Defines a method calculate_hash() within the Block class to calculate the hash of a block using SHA-256.
+Defines a method mine_block() within the Block class to perform proof of work by finding a hash with a certain number of leading zeros.
+Defines a class Blockchain to manage the blockchain. It initializes with the genesis block and sets the difficulty level for mining.
+Defines a method create_genesis_block() within the Blockchain class to create the genesis block of the blockchain.
+Defines a method get_latest_block() within the Blockchain class to return the latest block in the blockchain.
+Defines a method add_block() within the Blockchain class to add a new block to the blockchain, including setting the previous hash and mining the block.
+Defines a method is_chain_valid() within the Blockchain class to check the validity of the blockchain by verifying block hashes and previous hashes.
+Ensures that the following code is only executed when the script is run directly, not when it's imported as a module.
+Creates a blockchain, adds two blocks with sample transaction data, and prints a success message.
+Checks the validity of the blockchain and prints the result.
+Demonstrates solving cryptographic puzzles by mining blocks with different difficulty levels (4 zeros and 5 zeros) and printing the resulting nonces.

@@ -1,0 +1,43 @@
+Lab4: Ethereum Blockchain Programming- Solidity Langauge
+Task 1: Setup Metamask- Ethereum crypto wallet 
+Task 2: Use Remix Ethereum IDE and write a smart contract using Solidity, compile, debug, and deploy it.
+Task 3: Deposit some ether in your Metamask accounts. 
+Task 4: Find the Gas used for a transaction, and trace the transaction.
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract Calculator {
+    // State variables
+    uint256 public result;
+
+    // Constructor
+    constructor() {
+        result = 0;
+    }
+
+    // Function to add two numbers
+    function add(uint256 a, uint256 b) public {
+        result = a + b;
+    }
+
+    // Function to subtract two numbers
+    function subtract(uint256 a, uint256 b) public {
+        result = a - b;
+    }
+
+    // Function to multiply two numbers
+    function multiply(uint256 a, uint256 b) public {
+        result = a * b;
+    }
+
+    // Function to divide two numbers
+    function divide(uint256 a, uint256 b) public {
+        require(b != 0, "Cannot divide by zero");
+        result = a / b;
+    }
+
+    // Function to get the current result
+    function getResult() public view returns (uint256) {
+        return result;
+    }
+}

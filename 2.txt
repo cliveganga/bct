@@ -1,0 +1,90 @@
+Lab 2: Blockchain Primitives- Cryptosystems
+Task 1: Perform the cryptographic hash functions md5 and SHA
+Task 2: Demonstrate the properties of Cryptographic hash functions.
+Task 3: Use the Pymerkel library to compute the hash of transactions.
+Task 4: Compute the Root hash (Merkle Root) for 11 transactions.
+--------------------------------------------------------------------
+import hashlib
+
+# Task 1: Perform the cryptographic hash functions md5 and SHA
+def md5_hash(data):
+    return hashlib.md5(data.encode()).hexdigest()
+
+def sha256_hash(data):
+    return hashlib.sha256(data.encode()).hexdigest()
+
+# Task 2: Demonstrate the properties of Cryptographic hash functions
+def demonstrate_hash_properties():
+    # Hash is deterministic
+    message = "Hello, world!"
+    hash1 = md5_hash(message)
+    hash2 = md5_hash(message)
+    print(f"Hash1: {hash1}")
+    print(f"Hash2: {hash2}")
+    assert hash1 == hash2, "Hashes should be the same for the same input"
+
+    # Slight change in input produces drastically different hash
+    message_changed = "Hello, world."
+    hash_changed = md5_hash(message_changed)
+    print(f"Hash Changed: {hash_changed}")
+    assert hash1 != hash_changed, "Hashes should be different for slightly different inputs"
+
+# Define a simple Merkle Tree class
+class MerkleTree:
+    def __init__(self, hashes):
+        self.hashes = hashes
+
+    def get_root(self):
+        if len(self.hashes) == 0:
+            return None
+        while len(self.hashes) > 1:
+            temp_hashes = []
+            for i in range(0, len(self.hashes), 2):
+                hash_pair = self.hashes[i:i+2]
+                combined_hash = hashlib.sha256("".join(hash_pair).encode()).hexdigest()
+                temp_hashes.append(combined_hash)
+            self.hashes = temp_hashes
+        return self.hashes[0]
+
+# Task 3: Compute the hash of transactions and construct Merkle Tree
+def compute_merkle_root(transactions):
+    # Compute hashes of transactions
+    transaction_hashes = [hashlib.sha256(tx.encode()).hexdigest() for tx in transactions]
+
+    # Construct Merkle Tree
+    merkle_tree = MerkleTree(transaction_hashes)
+
+    # Get Merkle Root
+    root_hash = merkle_tree.get_root()
+
+    return root_hash
+
+# Task 4: Compute the Root hash (Merkle Root) for 11 transactions
+def task_4():
+    transactions = ["Tx1", "Tx2", "Tx3", "Tx4", "Tx5", "Tx6", "Tx7", "Tx8", "Tx9", "Tx10", "Tx11"]
+
+    # Compute Merkle Root
+    root_hash = compute_merkle_root(transactions)
+
+    print(f"Merkle Root: {root_hash}")
+
+# Main function to run all tasks
+def main():
+    # Task 1
+    print("Task 1: Perform the cryptographic hash functions md5 and SHA")
+    data = "Hello, world!"
+    print(f"MD5 Hash: {md5_hash(data)}")
+    print(f"SHA256 Hash: {sha256_hash(data)}")
+
+    # Task 2
+    print("\nTask 2: Demonstrate the properties of Cryptographic hash functions")
+    demonstrate_hash_properties()
+
+    # Task 4
+    print("\nTask 4: Compute the Root hash (Merkle Root) for 11 transactions")
+    task_4()
+
+if __name__ == "__main__":
+    main()
+
+--------------------------------------------------------------------

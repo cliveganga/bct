@@ -1,0 +1,78 @@
+Lab 5: Ethereum Blockchain 
+Task 1: Install node.js, truffle suite, ganache-cli 
+Task 2: Use and demonstrate ganache-cli ethereum test network 
+Task 3: Configure node.js and Web3.js
+Task 4: Use Web3.js to transfer Ether from one account to another.
+
+ganache-cli
+npm init -y
+npm install web3@1.5.3
+
+const Web3 = require('web3');
+
+// Ganache local blockchain URL
+let ganacheURL = 'http://127.0.0.1:8545'
+
+// Instantiate web3 with Ganache provider
+const web3 = new Web3(ganacheURL);
+
+// Sender and receiver account addresses
+const senderAddress = '0x99Df69b2ccA7946dD6682CA9648b22E9cf188A36';
+const receiverAddress = '0xb695EF9992E2a17e859d909bc81677721747d4d0';
+
+// Private key of the sender account
+const senderPrivateKey = '0x09084a7bcb4197b99eeb49908c396a8df98b0979dbcfe784ca06f6ac5a84ec5d';
+
+// Transfer amount in Wei (1 ether = 10^18 Wei)
+const transferAmount = web3.utils.toWei('1', 'ether');
+
+// Function to transfer Ether
+async function transferEther() {
+    try {
+        // Display sender's account balance after the transaction
+        let senderBalance = await web3.eth.getBalance(senderAddress);
+        console.log('Sender Balance:', web3.utils.fromWei(senderBalance, 'ether'), 'ether');
+
+        // Display receiver's account balance after the transaction
+        let receiverBalance = await web3.eth.getBalance(receiverAddress);
+        console.log('Receiver Balance:', web3.utils.fromWei(receiverBalance, 'ether'), 'ether');
+
+        // Unlock the sender account
+        await web3.eth.accounts.wallet.add(senderPrivateKey);
+        const senderAccount = web3.eth.accounts.wallet[0];
+
+        // Get current nonce of the sender account
+        const nonce = await web3.eth.getTransactionCount(senderAccount.address);
+
+        // Build transaction object
+        const txObject = {
+            from: senderAccount.address,
+            to: receiverAddress,
+            value: transferAmount,
+            gas: 21000, // Gas limit for standard transactions
+            nonce: nonce,
+        };
+
+        // Sign the transaction
+        const signedTx = await web3.eth.accounts.signTransaction(txObject, senderAccount.privateKey);
+
+        // Send the transaction
+        const txReceipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+        console.log('Transaction Hash:', txReceipt.transactionHash);
+        console.log('Transfer Successful!');
+
+        // Display sender's account balance after the transaction
+        senderBalance = await web3.eth.getBalance(senderAccount.address);
+        console.log('Sender Balance:', web3.utils.fromWei(senderBalance, 'ether'), 'ether');
+
+        // Display receiver's account balance after the transaction
+        receiverBalance = await web3.eth.getBalance(receiverAddress);
+        console.log('Receiver Balance:', web3.utils.fromWei(receiverBalance, 'ether'), 'ether');
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Call the function to transfer Ether
+transferEther();

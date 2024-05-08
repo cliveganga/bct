@@ -1,0 +1,8 @@
+Lab 6: Hyperledger Fabric: 
+Refer to  https://hyperledger-fabric.readthedocs.io/en/latest/test_network.html
+curl -sSL http://bit.ly/2ysbOFE | bash -s 
+
+Task 1: Installation and configuration of HLF environment
+Task 2: Bringing up the test network  
+Task 3: Creating a channel and starting chain code on the channel
+Task 4: Interacting with the network.

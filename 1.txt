@@ -1,0 +1,199 @@
+Lab1: Blockchain Primitives- Cryptography :
+Task 1: Perform the symmetric encryption using AES-256-CBC using OpenSSL or Pyhton-Cryptography
+Task 2: Perform Public-key cryptography using RSA cryptography
+Task 3: Create and verify the digital signature.
+Task 4: Generate Digital Certificate (self-signed)
+----------------------------------------------------
+1. and 2. 
+from cryptography.hazmat.primitives import padding, hashes  
+# from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import padding as asymmetric_padding
+
+def encrypt_symmetric(message, key):
+    # Pad the message to be multiple of 16 bytes
+    padder = padding.PKCS7(128).padder()
+    padded_message = padder.update(message) + padder.finalize()
+
+    # Generate a random IV (Initialization Vector)
+    iv = b'\x00' * 16  # You should generate a random IV in a real scenario
+
+    # Create AES cipher object in CBC mode
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+
+    # Encrypt the padded message
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(padded_message) + encryptor.finalize()
+
+    return iv, ciphertext
+
+def decrypt_symmetric(iv, ciphertext, key):
+    # Create AES cipher object in CBC mode
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+
+    # Decrypt the ciphertext
+    decryptor = cipher.decryptor()
+    decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
+
+    # Unpad the decrypted message
+    unpadder = padding.PKCS7(128).unpadder()
+    original_message = unpadder.update(decrypted_message) + unpadder.finalize()
+
+    return original_message
+
+def encrypt_asymmetric(message, public_key):
+    # Encrypt the message using RSA public key
+    encrypted_message = public_key.encrypt(
+        message,
+        asymmetric_padding.OAEP(
+            mgf=asymmetric_padding.MGF1(algorithm=hashes.SHA256()),  # Fix here
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return encrypted_message
+
+def decrypt_asymmetric(encrypted_message, private_key):
+    # Decrypt the message using RSA private key
+    decrypted_message = private_key.decrypt(
+        encrypted_message,
+        asymmetric_padding.OAEP(
+            mgf=asymmetric_padding.MGF1(algorithm=hashes.SHA256()),  # Fix here
+            algorithm=hashes.SHA256(),
+            label=None
+        )
+    )
+    return decrypted_message
+
+# Generate RSA key pair
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+)
+public_key = private_key.public_key()
+
+# Sample message
+message = b"Hello, this is a secret message!"
+
+# Encrypt using symmetric encryption (AES-256-CBC)
+key = b'\x00' * 32  # 256-bit key
+iv, ciphertext = encrypt_symmetric(message, key)
+
+# Decrypt using symmetric encryption (AES-256-CBC)
+decrypted_message = decrypt_symmetric(iv, ciphertext, key)
+print("Decrypted message (Symmetric):", decrypted_message.decode())
+
+# Encrypt using asymmetric encryption (RSA)
+encrypted_message = encrypt_asymmetric(message, public_key)
+
+# Decrypt using asymmetric encryption (RSA)
+decrypted_message = decrypt_asymmetric(encrypted_message, private_key)
+print("Decrypted message (Asymmetric):", decrypted_message.decode())
+
+3. 
+openssl genpkey -algorithm RSA -out private_key.pem
+openssl rsa -pubout -in private_key.pem -out public_key.pem
+openssl dgst -sha256 -sign private_key.pem -out data.sha256 data.txt
+openssl dgst -sha256 -verify public_key.pem -signature data.sha256 data.txt
+
+4. 
+openssl genpkey -algorithm RSA -out private_key.pem
+openssl req -new -key private_key.pem -out certificate.csr
+openssl x509 -req -days 365 -in certificate.csr -signkey private_key.pem -out self_signed_certificate.pem
+
+openssl pkcs12 -export -out certificate.pfx -inkey private_key.pem -in certificate.pem
+2. Go to Settings.
+3. Scroll down and click on "Advanced."
+4. Under "Privacy and security," click on "Manage certificates."
+5. In the Certificate Manager, go to the "Personal" tab.
+6. Click on "Import" and select your `certificate.pfx` file.
+7. Follow the prompts to import the certificate, including entering the password you set during the PKCS#12 conversion process.
+8. Once imported, close and reopen Chrome.
+----------------------------------------------------
+
+
+
+
+
+
+
+
+
+To create a digital signature using OpenSSL, you'll typically follow these steps:
+1. Generate a key pair: If you haven't already generated a key pair, you'll need to do so. You can generate a private key and its corresponding public key using OpenSSL.
+2. Create a digest of the data: Before signing the data, you need to create a cryptographic hash (digest) of the data. This ensures integrity and provides a fixed-length representation of the data.
+3. Sign the digest: Once you have the digest, you sign it using your private key.
+
+Here's how you can do it:
+1. Generate a key pair:
+openssl genpkey -algorithm RSA -out private_key.pem
+openssl rsa -pubout -in private_key.pem -out public_key.pem
+
+2. Create a digest of the data:
+openssl dgst -sha256 -sign private_key.pem -out data.sha256 data.txt
+
+This command creates a SHA-256 digest of `data.txt` and signs it using the private key, saving the signature to `data.sha256`.
+Now you have successfully created a digital signature for your data. The signature is stored in the file `data.sha256`. Remember to replace `private_key.pem` with the path to your private key file and `data.txt` with the path to your data file.
+If you want to verify the signature later, you can do it with the corresponding public key:
+openssl dgst -sha256 -verify public_key.pem -signature data.sha256 data.txt
+
+This command verifies the signature stored in `data.sha256` against the contents of `data.txt` using the public key `public_key.pem`. If the signature is valid, it will output "Verified OK". Otherwise, it will output "Verification Failure".
+-------------------------------------------------------
+1. Generate a private key:
+openssl genpkey -algorithm RSA -out private_key.pem
+
+This command generates a private key named `private_key.pem` using the RSA algorithm.
+2. Create a Certificate Signing Request (CSR):
+openssl req -new -key private_key.pem -out certificate.csr
+
+This command creates a CSR named `certificate.csr` using the private key generated in the previous step. You will be prompted to enter information such as country, state, locality, organization, and common name. Fill in the requested information accordingly.
+
+3. Generate the self-signed certificate:
+openssl x509 -req -days 365 -in certificate.csr -signkey private_key.pem -out self_signed_certificate.pem
+
+This command generates a self-signed certificate named `self_signed_certificate.pem` using the CSR generated in the previous step and the private key. The `-days` option specifies the validity period of the certificate in days.
+
+Now you have successfully created a self-signed digital certificate. The private key is stored in `private_key.pem`, and the self-signed certificate is stored in `self_signed_certificate.pem`. You can use these files for various purposes such as SSL/TLS encryption, authentication, etc.
+4. :
+openssl pkcs12 -export -out certificate.pfx -inkey private_key.pem -in certificate.pem
+This command creates a PKCS#12 file named certificate.pfx containing both the private key and the certificate. You will be prompted to set a password for the PKCS#12 file.
+Now, you have a test certificate in PKCS#12 format (certificate.pfx). You To test your PKCS#12 certificate in a browser, you typically import it into the browser's certificate store. Here's how you can do it in common browsers:
+5. Test the certificate 
+Google Chrome:
+1. Open Google Chrome.
+2. Go to Settings.
+3. Scroll down and click on "Advanced."
+4. Under "Privacy and security," click on "Manage certificates."
+5. In the Certificate Manager, go to the "Personal" tab.
+6. Click on "Import" and select your `certificate.pfx` file.
+7. Follow the prompts to import the certificate, including entering the password you set during the PKCS#12 conversion process.
+8. Once imported, close and reopen Chrome.
+
+Mozilla Firefox:
+1. Open Firefox.
+2. Go to Options or Preferences.
+3. Click on "Privacy & Security."
+4. Scroll down to the "Certificates" section and click on "View Certificates."
+5. Go to the "Your Certificates" tab.
+6. Click on "Import" and select your `certificate.pfx` file.
+7. Follow the prompts to import the certificate, including entering the password you set during the PKCS#12 conversion process.
+8. Once imported, close and reopen Firefox.
+
+
+Microsoft Edge:
+1. Open Microsoft Edge.
+2. Go to Settings.
+3. Under "Privacy, search, and services," click on "Security."
+4. Scroll down to the "Manage certificates" section and click on "Manage certificates."
+5. In the Certificate Manager, go to the "Personal" tab.
+6. Click on "Import" and select your `certificate.pfx` file.
+7. Follow the prompts to import the certificate, including entering the password you set during the PKCS#12 conversion process.
+8. Once imported, close and reopen Edge.
+
+
+After importing the certificate, you should be able to navigate to a site that uses SSL/TLS with your test certificate and see it being used for secure communication. Remember to use HTTPS URLs for sites you want to test with SSL/TLS.can use this certificate for testing or development purposes, such as configuring SSL/TLS in applications or servers that support PKCS#12 certificates.
+------------------------------------------------------------------------
